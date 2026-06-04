@@ -23,6 +23,7 @@ $harmonyDll = Join-Path $bepinexCore "0Harmony.dll"
 $unityEngineDll = Join-Path $managed "UnityEngine.dll"
 $unityCoreDll = Join-Path $managed "UnityEngine.CoreModule.dll"
 $unityInputDll = Join-Path $managed "UnityEngine.InputLegacyModule.dll"
+$unityImguiDll = Join-Path $managed "UnityEngine.IMGUIModule.dll"
 $newtonsoftDll = Join-Path $managed "Newtonsoft.Json.dll"
 $netstandardDll = Join-Path $managed "netstandard.dll"
 
@@ -37,6 +38,7 @@ $netstandardDll = Join-Path $managed "netstandard.dll"
     "/reference:$unityEngineDll" `
     "/reference:$unityCoreDll" `
     "/reference:$unityInputDll" `
+    "/reference:$unityImguiDll" `
     "/reference:$newtonsoftDll" `
     "/reference:$netstandardDll" `
     "$sourceFile"
