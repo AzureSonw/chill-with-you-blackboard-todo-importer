@@ -3,9 +3,26 @@
   const DAYS_TO_SCAN = 21;
   const MAX_WARN_COUNT = 60;
   const SUBJECT_CODES = [
-    "CS", "CS", "CS", "CS", "CIS", "BIO", "BIOL", "CHEM",
-    "PHYS", "HIST", "PSYC", "SOC", "ART", "MUS", "COMM", "ECON",
-    "ACCT", "BUS", "STAT"
+    // Common Drexel, Penn, and general university subject codes.
+    "AAMW", "ACCT", "AFRC", "AFST", "ANTH", "ARAB", "ARCH", "ARTH", "ASAM", "ASRM",
+    "BE", "BIO", "BIOL", "BLAW", "BME", "BUS", "BUSN",
+    "CHEM", "CHIN", "CINE", "CIS", "CI", "CIVC", "CIVE", "CLST", "COM", "COMM", "CRIM", "CS",
+    "DANC", "DIGM", "DSCI",
+    "EAS", "ECE", "ECON", "EDUC", "ENGL", "ENGR", "ENTP", "ENVS", "ESL", "EVAL",
+    "FILM", "FIN", "FMST", "FREN",
+    "GAME", "GSWS",
+    "HIST", "HSCI", "HSOC", "HUM",
+    "INFO", "INTB", "ISYS", "ITAL",
+    "JAPN", "JWST",
+    "KOR",
+    "LAW", "LING", "LIT",
+    "MATH", "MEM", "MGMT", "MKTG", "MUS", "MUSC",
+    "NURS", "NUTR",
+    "OPIM", "ORGB",
+    "PHIL", "PHYS", "PPE", "PSCI", "PSYC",
+    "REAL", "RELS", "ROBO",
+    "SOC", "SPAN", "STAT", "STSC", "SYS",
+    "THTR", "TVST", "UNIV", "URBS", "VSCM", "WRIT"
   ];
 
   const MONTHS = {
@@ -379,16 +396,16 @@
 
   async function main() {
     const tasks = collect();
-  if (!tasks.length) {
-    alert("没有找到 Blackboard due items。请打开 Blackboard Calendar / Due Dates 页面后再点书签。");
-    return;
-  }
+    if (!tasks.length) {
+      alert("没有找到 Blackboard due items。请打开 Blackboard Calendar / Due Dates 页面后再点书签。");
+      return;
+    }
 
-  const lines = tasks.slice(0, 12).map(t => `${t.due.slice(5, 10)}  ${t.title}`);
-  const more = tasks.length > 12 ? `\n...还有 ${tasks.length - 12} 条` : "";
-  const warning = tasks.length > MAX_WARN_COUNT ? "\n\n注意：条数偏多，请确认不是整月重复列表。" : "";
-  const ok = confirm(`将发送 ${tasks.length} 条 Blackboard due item 到 Chill With You：\n\n${lines.join("\n")}${more}${warning}\n\n确定发送吗？`);
-  if (!ok) return;
+    const lines = tasks.slice(0, 12).map(t => `${t.due.slice(5, 10)}  ${t.title}`);
+    const more = tasks.length > 12 ? `\n...还有 ${tasks.length - 12} 条` : "";
+    const warning = tasks.length > MAX_WARN_COUNT ? "\n\n注意：条数偏多，请确认不是整月重复列表。" : "";
+    const ok = confirm(`将发送 ${tasks.length} 条 Blackboard due item 到 Chill With You：\n\n${lines.join("\n")}${more}${warning}\n\n确定发送吗？`);
+    if (!ok) return;
 
     try {
       const result = await sendToGame(tasks);
@@ -401,5 +418,7 @@
     }
   }
 
-  main();
+  main().catch(err => {
+    alert("Blackboard 导入脚本出错：" + err.message);
+  });
 })();
