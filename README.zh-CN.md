@@ -1,179 +1,218 @@
 # Chill With You Blackboard Todo Importer
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+这是一个为 **Chill With You: Lo-Fi Story** 制作的 Blackboard Todo 导入插件。  
+它可以把 Blackboard `Calendar > Due Dates` 里的任务导入到游戏内 Todo 列表中，让 deadline 以更轻松的方式显示在游戏里。
 
-本项目开发过程中使用了 AI 协助。
+这个项目是在 AI 协助下完成的。AI 主要帮助我整理思路、排查问题、优化代码结构和润色文档；项目需求、测试过程和最终调整方向都是根据实际使用场景一步一步完成的。
 
-这是一个给 **Chill With You: Lo-Fi Story** 用的 BepInEx 5 插件，可以把 Blackboard Calendar / Due Dates 里的截止事项导入到游戏内 Todo 列表。
+---
 
-项目包含两部分：
+## ✨ 功能
 
-- `src/BlackboardTodoImporterPlugin.cs`：Unity 游戏里加载的 BepInEx 插件。
-- `browser/blackboard-to-chill-importer.js`：Blackboard 页面用的 Chrome 书签脚本，负责扫描 due items 并发送给本地游戏插件。
+- 从 Blackboard `Calendar > Due Dates` 页面读取 due items
+- 自动提取任务标题、课程简称和截止时间
+- 通过本地 HTTP 接口发送到游戏插件
+- 在游戏内创建普通 Todo 项
+- 使用稳定 ID 避免重复导入
+- 支持手动 JSON 导入
+- 支持 `F10` 快捷键重新导入
+- 数据只发送到 `localhost`，不会上传到外部服务器
 
-## 功能
+---
 
-- Blackboard due items 会作为普通 `Bulbul.TodoData` 导入。
-- 使用 `TodoListData.AddTodo(todo)`，让游戏自己的保存系统处理 Todo。
-- 使用稳定的 Blackboard 派生 ID 和标题规范化来避免重复。
-- 新导入的 Todo 默认保持 `Working` 状态。
-- 使用 `TodoData.SetExpire(DateTime)` 设置截止日期。
-- 通过反射和 Harmony patch 查找当前活跃 Todo 列表。
-- 找不到活跃列表时，会回退到第一个已保存 Todo 列表。
-- 启动本地导入接口：`http://127.0.0.1:29472/blackboard-import`。
-- 附带 Chrome 书签脚本，可扫描 Blackboard `Calendar > Due Dates` 未来 21 天内的项目。
-- 会从 Blackboard 课程链接里提取 subject，例如 `CS - Example Homework`、`CS - Example Project`、`CS - Example Quiz`。
-- 会清理旧导入项，包括遗留的 `[BB:...]` 标题，以及误带日期头的标题，例如 `Today - July 15, 2026 Example Homework`。
+## 📦 项目内容
 
-## 需求
+项目主要包含两部分：
+
+```text
+src/BlackboardTodoImporterPlugin.cs
+```
+
+游戏端 BepInEx 插件，负责接收任务并写入游戏内 Todo 列表。
+
+```text
+browser/blackboard-to-chill-importer.js
+```
+
+浏览器书签脚本，负责从 Blackboard 页面读取 due items，并发送给本地插件。
+
+---
+
+## 🛠️ 安装步骤
+
+### 环境要求
 
 - Windows
-- Steam 安装的 Chill With You: Lo-Fi Story
-- 游戏目录里已经安装 BepInEx 5
-- Chrome，并且已经登录 Blackboard
-- 如果要从源码构建，需要 PowerShell 运行 `build.ps1`
+- Steam 版 **Chill With You: Lo-Fi Story**
+- Chrome 浏览器
+- 已登录 Blackboard
+- BepInEx 5.4.x 或更高版本
 
-下面示例使用的游戏目录是：
+---
+
+### 1. 安装 BepInEx
+
+1. 下载 **BepInEx 5 x64** 版本。
+2. 解压 BepInEx。
+3. 把解压后的文件复制到游戏根目录。
+
+游戏根目录大概类似：
 
 ```text
 SteamLibrary\steamapps\common\Chill with You Lo-Fi Story
 ```
 
-如果你的 Steam 库在其他盘或其他文件夹，把示例里的 `<GameRoot>` 换成你自己的游戏根目录即可。
-
-## 从 Release 快速安装
-
-如果你只想安装插件和书签脚本，用这个方式最快。
-
-1. 打开最新版 Release：
+复制完成后，结构应该类似：
 
 ```text
-https://github.com/AzureSonw/chill-with-you-blackboard-todo-importer/releases/latest
+[游戏根目录]/
+├── BepInEx/
+├── doorstop_config.ini
+├── winhttp.dll
+└── Chill With You.exe
 ```
 
-2. 下载这两个 release 文件：
+4. 运行一次游戏。
+5. 关闭游戏后，确认已经生成：
+
+```text
+BepInEx/plugins/
+BepInEx/config/
+BepInEx/LogOutput.log
+```
+
+如果这些文件夹和日志出现，说明 BepInEx 已经安装成功。
+
+---
+
+### 2. 安装插件
+
+从 Release 下载最新版本的插件文件：
 
 ```text
 ChillWithYou.BlackboardTodoImporter.dll
+```
+
+然后把它放到：
+
+```text
+[游戏根目录]/BepInEx/plugins/
+```
+
+最终结构应该类似：
+
+```text
+[游戏根目录]/
+└── BepInEx/
+    └── plugins/
+        └── ChillWithYou.BlackboardTodoImporter.dll
+```
+
+启动游戏后，可以在日志里看到类似内容：
+
+```text
+Blackboard Todo Importer loaded.
+Blackboard bookmarklet HTTP server listening on http://127.0.0.1:29472/blackboard-import
+```
+
+如果没有看到，可以检查：
+
+```text
+BepInEx/LogOutput.log
+```
+
+---
+
+### 3. 安装浏览器书签脚本
+
+从 Release 下载并解压：
+
+```text
 BlackboardAutoImportJS-v1.1.0.zip
 ```
 
-3. 把 DLL 放进游戏的 BepInEx 插件文件夹：
-
-```text
-<GameRoot>\BepInEx\plugins\ChillWithYou.BlackboardTodoImporter.dll
-```
-
-按开发时的 Steam 库结构，路径看起来像这样：
-
-```text
-SteamLibrary\steamapps\common\Chill with You Lo-Fi Story\BepInEx\plugins\ChillWithYou.BlackboardTodoImporter.dll
-```
-
-4. 解压 `BlackboardAutoImportJS-v1.1.0.zip` 到任意方便的位置。
-
-5. 用 Chrome 打开解压后的文件：
+打开里面的：
 
 ```text
 install-bookmarklet.html
 ```
 
-6. 在 Chrome 按 `Ctrl+Shift+B` 显示书签栏，然后把页面里的 `Blackboard -> Chill Todo` 按钮拖到书签栏。
-
-如果拖不动，就手动新建一个 Chrome 书签，把 `blackboard-bookmarklet.txt` 里的完整单行内容粘贴到书签的网址字段。
-
-7. 启动或重启 Chill With You。
-
-8. 打开日志确认插件加载：
+然后把页面里的：
 
 ```text
-<GameRoot>\BepInEx\LogOutput.log
+Blackboard -> Chill Todo
 ```
 
-正常会看到类似：
+按钮拖到 Chrome 书签栏。
+
+如果拖动失败，也可以手动创建 Chrome 书签，并把：
 
 ```text
-Loading [Blackboard Todo Importer 1.1.0]
-Blackboard bookmarklet HTTP server listening on http://127.0.0.1:29472/blackboard-import
+blackboard-bookmarklet.txt
 ```
 
-## 从 Blackboard 自动导入
+里的内容复制到书签 URL 里。
 
-1. 启动 Chill With You，并保持游戏运行。
-2. 在 Chrome 打开 Blackboard 的 `Calendar > Due Dates` 页面。
-3. 点击书签栏里的 `Blackboard -> Chill Todo`。
-4. 浏览器弹窗会显示检测到的 due items，确认无误后发送。
-5. 打开游戏内 Todo 面板查看。
+---
 
-游戏 UI 有时需要重新打开 Todo 面板，或重启游戏后，才会显示新导入项目。
+## 🚀 使用方法
 
-## 从源码构建
+1. 启动 **Chill With You: Lo-Fi Story**。
+2. 打开 Blackboard 的 `Calendar > Due Dates` 页面。
+3. 点击 Chrome 书签栏里的 `Blackboard -> Chill Todo`。
+4. 浏览器会弹出检测到的任务列表。
+5. 确认后，任务会发送到游戏插件。
+6. 回到游戏内打开 Todo 面板查看。
 
-1. 构建插件：
+有时候游戏 UI 不会立刻刷新，可以尝试：
 
-```powershell
-.\build.ps1
-```
+- 重新打开 Todo 面板
+- 等几秒
+- 或重启游戏
 
-如果脚本无法自动找到游戏目录，就手动传入：
+---
 
-```powershell
-.\build.ps1 -GameRoot "<GameRoot>"
-```
+## 📄 手动 JSON 导入
 
-2. 把构建出的 DLL：
+插件也支持手动导入 JSON 文件。
+
+文件路径：
 
 ```text
-bin\Release\ChillWithYou.BlackboardTodoImporter.dll
+[游戏根目录]/BepInEx/config/blackboard_tasks.json
 ```
 
-复制到：
-
-```text
-<GameRoot>\BepInEx\plugins\ChillWithYou.BlackboardTodoImporter.dll
-```
-
-3. 启动或重启 Chill With You。
-
-4. 打开日志确认插件加载：
-
-```text
-<GameRoot>\BepInEx\LogOutput.log
-```
-
-能看到 `Blackboard Todo Importer` 的日志就说明插件已运行。
-
-## 手动 JSON 导入
-
-插件也支持手动 JSON 文件：
-
-```text
-<GameRoot>\BepInEx\config\blackboard_tasks.json
-```
-
-示例：
+示例内容：
 
 ```json
 [
   {
     "id": "example-assignment-id",
-    "title": "CS - Example Homework 8",
+    "title": "Example Homework",
     "due": "2026-07-15T23:59:00"
   }
 ]
 ```
 
-在游戏内按 `F10` 可以导入这个 JSON 文件。
-
-## 配置
-
-BepInEx 会创建配置文件：
+放好文件后，在游戏内按：
 
 ```text
-<GameRoot>\BepInEx\config\com.local.chillwithyou.blackboardtodoimporter.cfg
+F10
 ```
 
-常用设置：
+即可手动导入。
+
+---
+
+## ⚙️ 配置文件
+
+插件会自动生成配置文件：
+
+```text
+[游戏根目录]/BepInEx/config/com.local.chillwithyou.blackboardtodoimporter.cfg
+```
+
+常用配置：
 
 ```ini
 [Import]
@@ -182,24 +221,90 @@ Hotkey = F10
 HttpPort = 29472
 ```
 
-本地 HTTP 接口是：
+说明：
+
+- `AutoImportOnStart`：游戏启动后是否自动尝试导入
+- `Hotkey`：手动导入快捷键
+- `HttpPort`：本地 HTTP 接口端口
+
+---
+
+## 🧪 从源码构建
+
+如果想自己构建插件，可以运行：
+
+```powershell
+.\build.ps1
+```
+
+如果脚本找不到游戏目录，可以手动指定：
+
+```powershell
+.\build.ps1 -GameRoot "<GameRoot>"
+```
+
+构建完成后，生成的 DLL 会在：
+
+```text
+bin/Release/
+```
+
+把 DLL 放入：
+
+```text
+[游戏根目录]/BepInEx/plugins/
+```
+
+然后重启游戏即可。
+
+---
+
+## 🔒 隐私说明
+
+这个工具只读取当前浏览器里已经打开的 Blackboard 页面。
+
+提取出的任务数据只会发送到本机地址：
 
 ```text
 http://127.0.0.1:29472/blackboard-import
 ```
 
-## 隐私
+不会上传到外部服务器。
 
-浏览器脚本只读取你当前已经打开的 Blackboard 页面里的 due items。它只会把提取出的 JSON 发送到本机：
+建议不要把真实的：
 
 ```text
-http://127.0.0.1:29472/blackboard-import
+blackboard_tasks.json
 ```
 
-不要提交真实的 `blackboard_tasks.json` 或导出的作业数据。`.gitignore` 已经排除了常见的本地和私有 payload 文件名。
+或其他导出的个人任务数据提交到公开仓库。
 
-## 备注
+---
 
-- 普通 Todo 使用 `TodoData`，本项目故意不使用 `TaskES3`。
-- 插件通过反射访问游戏类型，降低小游戏更新导致 assembly 加载失败的概率。
-- Blackboard 的 DOM 会因学校和主题不同而变化。浏览器脚本优先读取可见 due cards，也会回退读取折叠的月份列表文本。
+## 📝 备注
+
+这个项目主要是一个个人工具型项目，用来练习：
+
+- BepInEx 插件开发
+- Unity 游戏运行时数据修改
+- 浏览器脚本
+- 本地 HTTP 通信
+- JSON 数据处理
+- 调试和整理一个完整的小工具
+
+后续如果继续改，可能会优化：
+
+- Blackboard 页面解析
+- 游戏内 UI 刷新
+- 错误提示
+- 配置界面
+
+---
+
+## ⚠️ 免责声明
+
+本项目仅供学习和个人使用。  
+不同版本的游戏、BepInEx 或 Blackboard 页面结构可能会导致功能失效。
+
+使用前建议备份游戏存档和配置文件。  
+如果游戏或 Blackboard 页面更新，插件可能需要重新调整。
