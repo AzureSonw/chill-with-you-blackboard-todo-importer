@@ -1,5 +1,7 @@
 # Chill With You Blackboard Todo Importer
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 A Blackboard Todo importer plugin for **Chill With You: Lo-Fi Story**.  
 It imports tasks from Blackboard `Calendar > Due Dates` into the in-game Todo list, so deadlines can show up in a calmer and more natural place.
 
