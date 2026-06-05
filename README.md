@@ -22,6 +22,16 @@ This project was built with AI assistance. AI helped with brainstorming, debuggi
 
 ---
 
+## 🔄 First-Time Refresh
+
+After running the Chrome bookmarklet, imported tasks may not appear immediately.
+
+Open the Todo panel and click the Todo list selector once to refresh the list.
+
+![Refresh Todo List](docs/refresh-todo-list.gif)
+
+---
+
 ## 📦 Project Structure
 
 The project has two main parts:
@@ -172,8 +182,6 @@ into the bookmark URL field.
 4. The browser will show the detected tasks in a confirmation popup.
 5. Confirm the popup to send the tasks to the game plugin.
 6. Open the in-game Todo panel to check the imported tasks.
-
-After running the Chrome bookmarklet, the game may need a manual UI refresh before the new items appear. Open the Todo list panel, then click the Todo list selector/list once to refresh it.
 
 Sometimes the game UI may not refresh immediately. You can try:
 
