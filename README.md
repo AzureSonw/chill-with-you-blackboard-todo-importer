@@ -99,6 +99,8 @@ If they exist, BepInEx is installed correctly.
 
 ### 2. Install the Plugin
 
+Download the latest release package from the Releases page.
+
 If the release zip contains a `BepInEx` folder, copy that whole folder directly into the game root folder.
 
 The game root folder should then look similar to:
@@ -136,6 +138,8 @@ BepInEx/LogOutput.log
 
 ### 3. Install the Browser Bookmarklet
 
+Download the latest release package from the Releases page.
+
 If the release zip contains a `Chrome` folder, open that folder first.
 
 Open:
@@ -169,9 +173,12 @@ into the bookmark URL field.
 5. Confirm the popup to send the tasks to the game plugin.
 6. Open the in-game Todo panel to check the imported tasks.
 
+After running the Chrome bookmarklet, the game may need a manual UI refresh before the new items appear. Open the Todo list panel, then click the Todo list selector/list once to refresh it.
+
 Sometimes the game UI may not refresh immediately. You can try:
 
 - Reopening the Todo panel
+- Clicking the Todo list selector/list once
 - Waiting a few seconds
 - Restarting the game
 
