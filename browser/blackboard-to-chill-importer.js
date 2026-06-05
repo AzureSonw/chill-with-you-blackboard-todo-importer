@@ -3,7 +3,7 @@
   const DAYS_TO_SCAN = 21;
   const MAX_WARN_COUNT = 60;
   const SUBJECT_CODES = [
-    // Common Drexel, Penn, and general university subject codes.
+    // Common general university subject codes.
     "AAMW", "ACCT", "AFRC", "AFST", "ANTH", "ARAB", "ARCH", "ARTH", "ASAM", "ASRM",
     "BE", "BIO", "BIOL", "BLAW", "BME", "BUS", "BUSN",
     "CHEM", "CHIN", "CINE", "CIS", "CI", "CIVC", "CIVE", "CLST", "COM", "COMM", "CRIM", "CS",
