@@ -1,0 +1,12 @@
+bin/
+obj/
+*.user
+*.suo
+*.pdb
+*.dll
+*.zip
+
+# Local/private Blackboard export payloads. Do not commit real course data.
+blackboard_tasks.json
+blackboard_tasks.imported*.json
+
