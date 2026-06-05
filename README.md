@@ -1,154 +1,183 @@
 # Chill With You Blackboard Todo Importer
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+A Blackboard Todo importer plugin for **Chill With You: Lo-Fi Story**.  
+It imports tasks from Blackboard `Calendar > Due Dates` into the in-game Todo list, so deadlines can show up in a calmer and more natural place.
 
-This project was built with AI assistance.
+This project was built with AI assistance. AI helped with brainstorming, debugging, code organization, and documentation polishing; the project goals, testing process, and final implementation choices were based on my own workflow and use case.
 
-BepInEx 5 plugin for **Chill With You: Lo-Fi Story** that imports Blackboard Calendar deadlines into the in-game Todo list.
+---
 
-The project has two parts:
+## ✨ Features
 
-- `src/BlackboardTodoImporterPlugin.cs`: the BepInEx plugin loaded by the Unity game.
-- `browser/blackboard-to-chill-importer.js`: a Blackboard Calendar bookmarklet script that scans due items and sends them to the local game plugin.
+- Reads due items from Blackboard `Calendar > Due Dates`
+- Extracts task titles, course subject labels, and due times
+- Sends tasks to the game plugin through a local HTTP endpoint
+- Creates normal Todo items inside the game
+- Uses stable IDs to avoid duplicate imports
+- Supports manual JSON import
+- Supports `F10` as a manual re-import hotkey
+- Sends data only to `localhost`; nothing is uploaded to an external server
 
-## Features
+---
 
-- Imports Blackboard due items as normal `Bulbul.TodoData`.
-- Uses `TodoListData.AddTodo(todo)`, so the game saves through its own save system.
-- Avoids duplicates with stable Blackboard-derived IDs and normalized title cleanup.
-- Keeps new todos in the `Working` state.
-- Adds expiration dates with `TodoData.SetExpire(DateTime)`.
-- Finds the active/current Todo list through reflection and Harmony patches.
-- Falls back to the first saved Todo list if no active list is found.
-- Starts a localhost import endpoint at `http://127.0.0.1:29472/blackboard-import`.
-- Includes a browser bookmarklet that scans Blackboard `Calendar > Due Dates` for the next 21 days.
-- Extracts course subjects from Blackboard due-item course links, so titles can look like `CS - Example Homework`, `CS - Example Project`, or `CS - Example Quiz`.
-- Cleans older imported Blackboard items, including legacy `[BB:...]` titles and accidentally duplicated date-header titles such as `Today - July 15, 2026 Example Homework`.
+## 📦 Project Structure
 
-## Requirements
+The project has two main parts:
+
+```text
+src/BlackboardTodoImporterPlugin.cs
+```
+
+The game-side BepInEx plugin. It receives tasks and writes them into the in-game Todo list.
+
+```text
+browser/blackboard-to-chill-importer.js
+```
+
+The browser bookmarklet script. It reads due items from Blackboard and sends them to the local game plugin.
+
+---
+
+## 🛠️ Installation
+
+### Requirements
 
 - Windows
-- Chill With You: Lo-Fi Story installed through Steam
-- BepInEx 5 installed in the game folder
-- Chrome with an already logged-in Blackboard session
-- PowerShell for building with `build.ps1` if you build from source
+- Steam version of **Chill With You: Lo-Fi Story**
+- Chrome browser
+- An already logged-in Blackboard session
+- BepInEx 5.4.x or newer
 
-The examples below use this game folder:
+---
+
+### 1. Install BepInEx
+
+1. Download the **BepInEx 5 x64** version.
+2. Extract BepInEx.
+3. Copy the extracted files into the game root folder.
+
+The game root folder usually looks similar to:
 
 ```text
 SteamLibrary\steamapps\common\Chill with You Lo-Fi Story
 ```
 
-If your Steam library is on another drive or folder, use your own game root path in the same places.
-
-## Quick Install From Release
-
-Use this path if you only want to install the plugin and bookmarklet.
-
-1. Open the latest release:
+After copying the files, the folder should look similar to:
 
 ```text
-https://github.com/AzureSonw/chill-with-you-blackboard-todo-importer/releases/latest
+[GameRoot]/
+├── BepInEx/
+├── doorstop_config.ini
+├── winhttp.dll
+└── Chill With You.exe
 ```
 
-2. Download these release assets:
+4. Run the game once.
+5. Close the game and confirm that these files or folders were created:
+
+```text
+BepInEx/plugins/
+BepInEx/config/
+BepInEx/LogOutput.log
+```
+
+If they exist, BepInEx is installed correctly.
+
+---
+
+### 2. Install the Plugin
+
+Download the latest plugin file from the Release page:
 
 ```text
 ChillWithYou.BlackboardTodoImporter.dll
+```
+
+Place it into:
+
+```text
+[GameRoot]/BepInEx/plugins/
+```
+
+The final structure should look similar to:
+
+```text
+[GameRoot]/
+└── BepInEx/
+    └── plugins/
+        └── ChillWithYou.BlackboardTodoImporter.dll
+```
+
+After starting the game, the log should include something similar to:
+
+```text
+Blackboard Todo Importer loaded.
+Blackboard bookmarklet HTTP server listening on http://127.0.0.1:29472/blackboard-import
+```
+
+If not, check:
+
+```text
+BepInEx/LogOutput.log
+```
+
+---
+
+### 3. Install the Browser Bookmarklet
+
+Download and extract:
+
+```text
 BlackboardAutoImportJS-v1.1.0.zip
 ```
 
-3. Copy the DLL into the game's BepInEx plugin folder:
-
-```text
-<GameRoot>\BepInEx\plugins\ChillWithYou.BlackboardTodoImporter.dll
-```
-
-For the Steam library layout used during development, that path looks like:
-
-```text
-SteamLibrary\steamapps\common\Chill with You Lo-Fi Story\BepInEx\plugins\ChillWithYou.BlackboardTodoImporter.dll
-```
-
-4. Extract `BlackboardAutoImportJS-v1.1.0.zip` anywhere convenient.
-
-5. Open the extracted file:
+Open:
 
 ```text
 install-bookmarklet.html
 ```
 
-6. In Chrome, show the bookmarks bar with `Ctrl+Shift+B`, then drag the `Blackboard -> Chill Todo` button to the bookmarks bar.
-
-If dragging does not work, create a Chrome bookmark manually and paste the full single-line contents of `blackboard-bookmarklet.txt` into the bookmark URL field.
-
-7. Start or restart Chill With You.
-
-8. Confirm the plugin loaded in:
+Then drag the button below to the Chrome bookmarks bar:
 
 ```text
-<GameRoot>\BepInEx\LogOutput.log
+Blackboard -> Chill Todo
 ```
 
-Expected log lines include:
+If dragging does not work, create a Chrome bookmark manually and paste the contents of:
 
 ```text
-Loading [Blackboard Todo Importer 1.1.0]
-Blackboard bookmarklet HTTP server listening on http://127.0.0.1:29472/blackboard-import
+blackboard-bookmarklet.txt
 ```
 
-## Use Blackboard Auto Import
+into the bookmark URL field.
 
-1. Start Chill With You and leave it running.
-2. Open Chrome and go to Blackboard `Calendar > Due Dates`.
+---
+
+## 🚀 Usage
+
+1. Start **Chill With You: Lo-Fi Story**.
+2. Open Blackboard `Calendar > Due Dates` in Chrome.
 3. Click the `Blackboard -> Chill Todo` bookmark.
-4. Confirm the browser popup if the detected due items look correct.
-5. Open the in-game Todo panel.
+4. The browser will show the detected tasks in a confirmation popup.
+5. Confirm the popup to send the tasks to the game plugin.
+6. Open the in-game Todo panel to check the imported tasks.
 
-The game may need the Todo panel to be reopened, or the game restarted, before newly imported items appear in the UI.
+Sometimes the game UI may not refresh immediately. You can try:
 
-## Build From Source
+- Reopening the Todo panel
+- Waiting a few seconds
+- Restarting the game
 
-1. Build the plugin:
+---
 
-```powershell
-.\build.ps1
-```
+## 📄 Manual JSON Import
 
-If the script cannot find your game folder automatically, pass it explicitly:
+The plugin also supports manual JSON import.
 
-```powershell
-.\build.ps1 -GameRoot "<GameRoot>"
-```
-
-2. Copy the built DLL:
+File path:
 
 ```text
-bin\Release\ChillWithYou.BlackboardTodoImporter.dll
-```
-
-to:
-
-```text
-<GameRoot>\BepInEx\plugins\ChillWithYou.BlackboardTodoImporter.dll
-```
-
-3. Start or restart Chill With You.
-
-4. Confirm the plugin loaded in:
-
-```text
-<GameRoot>\BepInEx\LogOutput.log
-```
-
-You should see log lines from `Blackboard Todo Importer`.
-
-## Manual JSON Import
-
-The plugin also supports a manual JSON file:
-
-```text
-<GameRoot>\BepInEx\config\blackboard_tasks.json
+[GameRoot]/BepInEx/config/blackboard_tasks.json
 ```
 
 Example:
@@ -157,23 +186,31 @@ Example:
 [
   {
     "id": "example-assignment-id",
-    "title": "CS - Example Homework 8",
+    "title": "Example Homework",
     "due": "2026-07-15T23:59:00"
   }
 ]
 ```
 
-Press `F10` in-game to import the JSON file.
-
-## Configuration
-
-BepInEx creates:
+After placing the file, press:
 
 ```text
-<GameRoot>\BepInEx\config\com.local.chillwithyou.blackboardtodoimporter.cfg
+F10
 ```
 
-Important settings:
+inside the game to import it manually.
+
+---
+
+## ⚙️ Configuration
+
+The plugin automatically creates this config file:
+
+```text
+[GameRoot]/BepInEx/config/com.local.chillwithyou.blackboardtodoimporter.cfg
+```
+
+Common settings:
 
 ```ini
 [Import]
@@ -182,24 +219,90 @@ Hotkey = F10
 HttpPort = 29472
 ```
 
-The local HTTP endpoint is:
+Settings:
+
+- `AutoImportOnStart`: whether the plugin should try to import automatically when the game starts
+- `Hotkey`: manual import hotkey
+- `HttpPort`: local HTTP endpoint port
+
+---
+
+## 🧪 Building From Source
+
+To build the plugin yourself, run:
+
+```powershell
+.\build.ps1
+```
+
+If the script cannot find your game folder, pass it manually:
+
+```powershell
+.\build.ps1 -GameRoot "<GameRoot>"
+```
+
+The built DLL will be placed in:
+
+```text
+bin/Release/
+```
+
+Copy the DLL into:
+
+```text
+[GameRoot]/BepInEx/plugins/
+```
+
+Then restart the game.
+
+---
+
+## 🔒 Privacy
+
+This tool only reads the Blackboard page that is already open in your browser.
+
+The extracted task data is sent only to the local address:
 
 ```text
 http://127.0.0.1:29472/blackboard-import
 ```
 
-## Privacy
+Nothing is uploaded to an external server.
 
-The browser script reads due items from the Blackboard page that is already open in your browser. It sends the extracted JSON only to localhost:
+Do not commit real personal task exports such as:
 
 ```text
-http://127.0.0.1:29472/blackboard-import
+blackboard_tasks.json
 ```
 
-Do not commit real `blackboard_tasks.json` files or exported assignment payloads. `.gitignore` excludes common local/private payload names.
+or other exported private payloads to a public repository.
 
-## Notes
+---
 
-- Ordinary Todo items use `TodoData`; this project intentionally does not use `TaskES3`.
-- The plugin uses reflection for game types so small game updates are less likely to break assembly loading.
-- Blackboard's DOM can vary by school/theme. The browser script uses visible due cards first and falls back to collapsed month-list text.
+## 📝 Notes
+
+This is a small personal utility project. It helped me practice:
+
+- BepInEx plugin development
+- Runtime data modification in a Unity game
+- Browser scripting
+- Local HTTP communication
+- JSON data handling
+- Debugging and organizing a complete small tool
+
+Possible future improvements include:
+
+- Better Blackboard page parsing
+- More reliable in-game UI refreshing
+- Clearer error messages
+- A small settings UI
+
+---
+
+## ⚠️ Disclaimer
+
+This project is for learning and personal use.  
+Different versions of the game, BepInEx, or Blackboard page layouts may cause the plugin to stop working.
+
+Back up your game saves and configuration files before using it.  
+If the game or Blackboard page changes, the plugin may need updates.
