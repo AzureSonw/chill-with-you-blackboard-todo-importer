@@ -99,6 +99,8 @@ BepInEx/LogOutput.log
 
 ### 2. 安装插件
 
+从 Releases 页面下载最新 release 压缩包。
+
 如果 Release zip 里有 `BepInEx` 文件夹，直接把整个 `BepInEx` 文件夹复制到游戏根目录。
 
 游戏根目录最终应该类似：
@@ -136,6 +138,8 @@ BepInEx/LogOutput.log
 
 ### 3. 安装浏览器书签脚本
 
+从 Releases 页面下载最新 release 压缩包。
+
 如果 Release zip 里有 `Chrome` 文件夹，先打开这个文件夹。
 
 打开：
@@ -171,11 +175,22 @@ Chrome/blackboard-bookmarklet.txt
 5. 确认后，任务会发送到游戏插件。
 6. 回到游戏内打开 Todo 面板查看。
 
-有时候游戏 UI 不会立刻刷新，可以尝试：
+运行 Chrome 书签脚本后，游戏可能不会立刻显示新导入的任务，需要手动刷新一次列表。打开待办事项面板，然后点击一次待办事项列表选择框即可刷新。
+
+刷新时可以尝试：
 
 - 重新打开 Todo 面板
+- 点击一次待办事项列表选择框
 - 等几秒
 - 或重启游戏
+
+---
+
+## 🔄 刷新待办事项列表
+
+运行 Chrome 书签脚本后需要手动刷新列表，方法如下：
+
+![刷新待办事项列表](docs/refresh-todo-list.gif)
 
 ---
 
