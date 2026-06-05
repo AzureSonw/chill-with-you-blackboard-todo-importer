@@ -38,6 +38,16 @@ browser/blackboard-to-chill-importer.js
 
 The browser bookmarklet script. It reads due items from Blackboard and sends them to the local game plugin.
 
+Release packages may be organized into two folders:
+
+```text
+BepInEx/
+Chrome/
+```
+
+- `BepInEx/` contains the plugin files. Copy this folder directly into the game root folder.
+- `Chrome/` contains the bookmarklet install page and browser files.
+
 ---
 
 ## 🛠️ Installation
@@ -89,25 +99,24 @@ If they exist, BepInEx is installed correctly.
 
 ### 2. Install the Plugin
 
-Download the latest plugin file from the Release page:
+If the release zip contains a `BepInEx` folder, copy that whole folder directly into the game root folder.
 
-```text
-ChillWithYou.BlackboardTodoImporter.dll
-```
-
-Place it into:
-
-```text
-[GameRoot]/BepInEx/plugins/
-```
-
-The final structure should look similar to:
+The game root folder should then look similar to:
 
 ```text
 [GameRoot]/
-└── BepInEx/
-    └── plugins/
-        └── ChillWithYou.BlackboardTodoImporter.dll
+├── BepInEx/
+│   └── plugins/
+│       └── ChillWithYou.BlackboardTodoImporter.dll
+├── doorstop_config.ini
+├── winhttp.dll
+└── Chill With You.exe
+```
+
+If you downloaded only the DLL, place it into:
+
+```text
+[GameRoot]/BepInEx/plugins/
 ```
 
 After starting the game, the log should include something similar to:
@@ -127,16 +136,12 @@ BepInEx/LogOutput.log
 
 ### 3. Install the Browser Bookmarklet
 
-Download and extract:
-
-```text
-BlackboardAutoImportJS-v1.1.0.zip
-```
+If the release zip contains a `Chrome` folder, open that folder first.
 
 Open:
 
 ```text
-install-bookmarklet.html
+Chrome/install-bookmarklet.html
 ```
 
 Then drag the button below to the Chrome bookmarks bar:
@@ -148,7 +153,7 @@ Blackboard -> Chill Todo
 If dragging does not work, create a Chrome bookmark manually and paste the contents of:
 
 ```text
-blackboard-bookmarklet.txt
+Chrome/blackboard-bookmarklet.txt
 ```
 
 into the bookmark URL field.
