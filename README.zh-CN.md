@@ -38,6 +38,16 @@ browser/blackboard-to-chill-importer.js
 
 浏览器书签脚本，负责从 Blackboard 页面读取 due items，并发送给本地插件。
 
+Release 压缩包可能会分成两个文件夹：
+
+```text
+BepInEx/
+Chrome/
+```
+
+- `BepInEx/` 包含插件文件。直接把这个文件夹复制到游戏根目录即可。
+- `Chrome/` 包含浏览器书签脚本和安装页面。
+
 ---
 
 ## 🛠️ 安装步骤
@@ -89,25 +99,24 @@ BepInEx/LogOutput.log
 
 ### 2. 安装插件
 
-从 Release 下载最新版本的插件文件：
+如果 Release zip 里有 `BepInEx` 文件夹，直接把整个 `BepInEx` 文件夹复制到游戏根目录。
 
-```text
-ChillWithYou.BlackboardTodoImporter.dll
-```
-
-然后把它放到：
-
-```text
-[游戏根目录]/BepInEx/plugins/
-```
-
-最终结构应该类似：
+游戏根目录最终应该类似：
 
 ```text
 [游戏根目录]/
-└── BepInEx/
-    └── plugins/
-        └── ChillWithYou.BlackboardTodoImporter.dll
+├── BepInEx/
+│   └── plugins/
+│       └── ChillWithYou.BlackboardTodoImporter.dll
+├── doorstop_config.ini
+├── winhttp.dll
+└── Chill With You.exe
+```
+
+如果你只下载了 DLL 文件，则手动把它放到：
+
+```text
+[游戏根目录]/BepInEx/plugins/
 ```
 
 启动游戏后，可以在日志里看到类似内容：
@@ -127,16 +136,12 @@ BepInEx/LogOutput.log
 
 ### 3. 安装浏览器书签脚本
 
-从 Release 下载并解压：
+如果 Release zip 里有 `Chrome` 文件夹，先打开这个文件夹。
+
+打开：
 
 ```text
-BlackboardAutoImportJS-v1.1.0.zip
-```
-
-打开里面的：
-
-```text
-install-bookmarklet.html
+Chrome/install-bookmarklet.html
 ```
 
 然后把页面里的：
@@ -150,7 +155,7 @@ Blackboard -> Chill Todo
 如果拖动失败，也可以手动创建 Chrome 书签，并把：
 
 ```text
-blackboard-bookmarklet.txt
+Chrome/blackboard-bookmarklet.txt
 ```
 
 里的内容复制到书签 URL 里。
