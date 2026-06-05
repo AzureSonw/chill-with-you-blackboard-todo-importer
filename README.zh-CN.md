@@ -1,5 +1,7 @@
 # Chill With You Blackboard Todo Importer
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 这是一个为 **Chill With You: Lo-Fi Story** 制作的 Blackboard Todo 导入插件。  
 它可以把 Blackboard `Calendar > Due Dates` 里的任务导入到游戏内 Todo 列表中，让 deadline 以更轻松的方式显示在游戏里。
 
