@@ -16,6 +16,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using UnityEngine;
+using CS = System.Math;
 
 namespace BlackboardTodoImporter
 {
@@ -24,7 +25,7 @@ namespace BlackboardTodoImporter
     {
         private const string PluginGuid = "com.local.chillwithyou.blackboardtodoimporter";
         private const string PluginName = "Blackboard Todo Importer";
-        private const string PluginVersion = "1.1.0";
+        private const string PluginVersion = "1.3.0";
 
         private static readonly string[] CurrentListMemberNames =
         {
@@ -464,9 +465,8 @@ namespace BlackboardTodoImporter
                     return false;
                 }
 
-                cleanupCount += CleanupSyncedBlackboardTodos(todoListDataType, todoAllData, todoListData, tasks);
-                cleanupCount += CleanupSyncedBlackboardTodosByTitle(todoListDataType, todoAllData, todoListData, tasks);
-                ImportTasks(tasks, todoDataType, todoListDataType, todoListData);
+                cleanupCount += CleanupMalformedBlackboardTodosByTitle(todoListDataType, todoAllData, todoListData, tasks);
+                ImportTasks(tasks, todoDataType, todoListDataType, todoAllData, todoListData);
                 PersistTodoChanges(todoAllData, todoListData, allowUnityObjectSearch);
                 Log.LogInfo("Blackboard cleanup/import saved. LegacyRemoved=" + cleanupCount);
                 return true;
@@ -780,13 +780,14 @@ namespace BlackboardTodoImporter
             IList<BlackboardTask> tasks,
             Type todoDataType,
             Type todoListDataType,
+            object todoAllData,
             object todoListData)
         {
             var todoDic = GetMemberValue(todoListData, "TodoDic") as IDictionary;
             CleanupExistingBlackboardTodos(todoListDataType, todoListData, todoDic);
 
             todoDic = GetMemberValue(todoListData, "TodoDic") as IDictionary;
-            var existingIds = GetExistingTodoIds(todoDic);
+            var existingIds = GetExistingTodoIdsAcrossLists(todoListDataType, todoAllData, todoListData);
 
             var imported = 0;
             var skipped = 0;
@@ -817,11 +818,23 @@ namespace BlackboardTodoImporter
                 var prefix = "[BB:" + id + "]";
                 var title = task.title.Trim();
                 var uniqueId = GenerateStableUniqueId("blackboard:" + id);
-                var existingTodo = FindExistingBlackboardTodo(todoDic, id, uniqueId);
+                object existingTodoListData;
+                var existingTodo = FindExistingBlackboardTodoAcrossLists(
+                    todoListDataType,
+                    todoAllData,
+                    todoListData,
+                    id,
+                    uniqueId,
+                    out existingTodoListData);
                 if (existingTodo != null)
                 {
-                    StripLegacyPrefixIfNeeded(todoListDataType, todoListData, existingTodo, prefix, title);
-                    Log.LogInfo("Skipped duplicate Blackboard task: " + id);
+                    UpdateExistingBlackboardTodoTextIfNeeded(
+                        todoListDataType,
+                        existingTodoListData ?? todoListData,
+                        existingTodo,
+                        prefix,
+                        title);
+                    Log.LogInfo("Kept existing Blackboard task without resetting state or due date: " + id);
                     skipped++;
                     continue;
                 }
@@ -1099,7 +1112,7 @@ namespace BlackboardTodoImporter
             return removedCount;
         }
 
-        private int CleanupSyncedBlackboardTodosByTitle(
+        private int CleanupMalformedBlackboardTodosByTitle(
             Type todoListDataType,
             object todoAllData,
             object fallbackTodoListData,
@@ -1122,7 +1135,7 @@ namespace BlackboardTodoImporter
                         var todoListData = entry.Value;
                         if (IsInstanceOf(todoListData, todoListDataType))
                         {
-                            totalRemoved += CleanupTodoListByTitleKeys(todoListDataType, todoListData, titleKeys);
+                            totalRemoved += CleanupMalformedTodoListByTitleKeys(todoListDataType, todoListData, titleKeys);
                         }
                     }
                 }
@@ -1130,12 +1143,12 @@ namespace BlackboardTodoImporter
 
             if (totalRemoved == 0 && fallbackTodoListData != null)
             {
-                totalRemoved += CleanupTodoListByTitleKeys(todoListDataType, fallbackTodoListData, titleKeys);
+                totalRemoved += CleanupMalformedTodoListByTitleKeys(todoListDataType, fallbackTodoListData, titleKeys);
             }
 
             if (totalRemoved > 0)
             {
-                Log.LogInfo("Removed Blackboard Todo item(s) by normalized title before reimport: " + totalRemoved);
+                Log.LogInfo("Removed malformed Blackboard Todo item(s) by normalized title before import: " + totalRemoved);
             }
 
             return totalRemoved;
@@ -1166,7 +1179,7 @@ namespace BlackboardTodoImporter
             return keys;
         }
 
-        private int CleanupTodoListByTitleKeys(Type todoListDataType, object todoListData, HashSet<string> titleKeys)
+        private int CleanupMalformedTodoListByTitleKeys(Type todoListDataType, object todoListData, HashSet<string> titleKeys)
         {
             if (todoListData == null || titleKeys == null || titleKeys.Count == 0)
             {
@@ -1183,6 +1196,11 @@ namespace BlackboardTodoImporter
             foreach (var todo in CopyDictionaryValues(todoDic))
             {
                 var text = GetMemberValue(todo, "TodoText") as string;
+                if (!LooksLikeMalformedBlackboardTitle(text))
+                {
+                    continue;
+                }
+
                 var key = NormalizeBlackboardTitleKey(text);
                 if (!string.IsNullOrWhiteSpace(key) && titleKeys.Contains(key))
                 {
@@ -1206,6 +1224,15 @@ namespace BlackboardTodoImporter
             }
 
             return removedCount;
+        }
+
+        private static bool LooksLikeMalformedBlackboardTitle(string title)
+        {
+            return !string.IsNullOrWhiteSpace(title) &&
+                Regex.IsMatch(
+                    title,
+                    @"^\s*(today|tomorrow|yesterday|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*-\s*[a-z]+\s+\d{1,2},\s*20\d{2}\s+",
+                    RegexOptions.IgnoreCase);
         }
 
         private static string NormalizeBlackboardTitleKey(string title)
@@ -1588,6 +1615,54 @@ namespace BlackboardTodoImporter
             return null;
         }
 
+        private object FindExistingBlackboardTodoAcrossLists(
+            Type todoListDataType,
+            object todoAllData,
+            object fallbackTodoListData,
+            string blackboardId,
+            ulong stableUniqueId,
+            out object ownerTodoListData)
+        {
+            ownerTodoListData = null;
+
+            if (todoAllData != null)
+            {
+                var todoListDic = GetMemberValue(todoAllData, "TodoListDic") as IDictionary;
+                if (todoListDic != null)
+                {
+                    foreach (DictionaryEntry entry in todoListDic)
+                    {
+                        var todoListData = entry.Value;
+                        if (!IsInstanceOf(todoListData, todoListDataType))
+                        {
+                            continue;
+                        }
+
+                        var todoDic = GetMemberValue(todoListData, "TodoDic") as IDictionary;
+                        var found = FindExistingBlackboardTodo(todoDic, blackboardId, stableUniqueId);
+                        if (found != null)
+                        {
+                            ownerTodoListData = todoListData;
+                            return found;
+                        }
+                    }
+                }
+            }
+
+            if (fallbackTodoListData != null)
+            {
+                var todoDic = GetMemberValue(fallbackTodoListData, "TodoDic") as IDictionary;
+                var found = FindExistingBlackboardTodo(todoDic, blackboardId, stableUniqueId);
+                if (found != null)
+                {
+                    ownerTodoListData = fallbackTodoListData;
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
         private void StripLegacyPrefixIfNeeded(
             Type todoListDataType,
             object todoListData,
@@ -1622,6 +1697,45 @@ namespace BlackboardTodoImporter
             {
                 SetMemberValue(todo, "TodoText", cleaned);
                 Log.LogWarning("Removed legacy Blackboard prefix by setting TodoText directly; game save may require another Todo edit.");
+            }
+        }
+
+        private void UpdateExistingBlackboardTodoTextIfNeeded(
+            Type todoListDataType,
+            object todoListData,
+            object todo,
+            string legacyPrefix,
+            string title)
+        {
+            if (todo == null || string.IsNullOrWhiteSpace(title))
+            {
+                return;
+            }
+
+            var currentText = GetMemberValue(todo, "TodoText") as string;
+            var nextText = title.Trim();
+            string foundPrefix;
+            string cleaned;
+            if (TryStripLegacyPrefix(currentText, out foundPrefix, out cleaned) &&
+                !string.Equals(foundPrefix, legacyPrefix, StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(cleaned))
+            {
+                nextText = cleaned.Trim();
+            }
+
+            if (string.Equals(currentText, nextText, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (InvokeSetInputTextTodo(todoListDataType, todoListData, todo, nextText))
+            {
+                Log.LogInfo("Updated existing Blackboard Todo text without recreating it: " + nextText);
+            }
+            else
+            {
+                SetMemberValue(todo, "TodoText", nextText);
+                Log.LogWarning("Updated existing Blackboard Todo text directly; game save may require another Todo edit.");
             }
         }
 
@@ -1736,6 +1850,52 @@ namespace BlackboardTodoImporter
             }
 
             return ids;
+        }
+
+        private HashSet<ulong> GetExistingTodoIdsAcrossLists(
+            Type todoListDataType,
+            object todoAllData,
+            object fallbackTodoListData)
+        {
+            var ids = new HashSet<ulong>();
+
+            if (todoAllData != null)
+            {
+                var todoListDic = GetMemberValue(todoAllData, "TodoListDic") as IDictionary;
+                if (todoListDic != null)
+                {
+                    foreach (DictionaryEntry entry in todoListDic)
+                    {
+                        var todoListData = entry.Value;
+                        if (!IsInstanceOf(todoListData, todoListDataType))
+                        {
+                            continue;
+                        }
+
+                        AddExistingTodoIds(ids, GetMemberValue(todoListData, "TodoDic") as IDictionary);
+                    }
+                }
+            }
+
+            if (fallbackTodoListData != null)
+            {
+                AddExistingTodoIds(ids, GetMemberValue(fallbackTodoListData, "TodoDic") as IDictionary);
+            }
+
+            return ids;
+        }
+
+        private static void AddExistingTodoIds(HashSet<ulong> ids, IDictionary todoDic)
+        {
+            if (ids == null || todoDic == null)
+            {
+                return;
+            }
+
+            foreach (var id in GetExistingTodoIds(todoDic))
+            {
+                ids.Add(id);
+            }
         }
 
         private static ulong GenerateStableUniqueId(string seed)
