@@ -323,6 +323,12 @@ blackboard_tasks.json
 
 ---
 
+## 🔎 搜索关键词
+
+Blackboard Todo 导入器、Blackboard 作业导入、Blackboard 截止日期同步、Blackboard Due Dates、Blackboard 作业管理、Chill With You 插件、Chill With You Todo 导入、放松时光：与你共享Lo-Fi故事插件、作业追踪工具、学生效率工具、BepInEx 插件、Unity 游戏插件。
+
+---
+
 ## ⚠️ 免责声明
 
 本项目仅供学习和个人使用。  
