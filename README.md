@@ -5,8 +5,6 @@
 A Blackboard Todo importer plugin for **Chill With You: Lo-Fi Story**.  
 It imports tasks from Blackboard `Calendar > Due Dates` into the in-game Todo list, so deadlines can show up in a calmer and more natural place.
 
-**Search keywords:** Blackboard Todo Importer, Blackboard assignment importer, Blackboard homework importer, Blackboard due date importer, Blackboard task sync, Blackboard calendar due dates, Chill With You plugin, Chill With You Todo importer, Chill With You homework tracker, BepInEx plugin, Unity game plugin, student productivity tool, assignment tracker, homework tracker.
-
 This project was built with AI assistance. AI helped with brainstorming, debugging, code organization, and documentation polishing; the project goals, testing process, and final implementation choices were based on my own workflow and use case.
 
 ---
@@ -320,6 +318,12 @@ Possible future improvements include:
 - More reliable in-game UI refreshing
 - Clearer error messages
 - A small settings UI
+
+---
+
+## 🔎 Search Keywords
+
+Blackboard Todo Importer, Blackboard assignment importer, Blackboard homework importer, Blackboard due date importer, Blackboard task sync, Blackboard calendar due dates, Chill With You plugin, Chill With You Todo importer, Chill With You homework tracker, BepInEx plugin, Unity game plugin, student productivity tool, assignment tracker, homework tracker.
 
 ---
 
